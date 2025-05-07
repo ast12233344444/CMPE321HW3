@@ -1,0 +1,5 @@
+fastapi~=0.115.12
+pandas~=2.2.3
+PyMySQL~=1.1.1
+Flask~=3.1.0
+argparse~=1.4.0

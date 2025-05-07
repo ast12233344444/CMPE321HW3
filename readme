@@ -1,0 +1,9 @@
+to transfer the database into MySql, first install requirements for python, then create a database names HW3 in wotr mysql server,
+and set those parameters inside create_tables.py
+# --- MySQL config ---
+DB_HOST = '127.0.0.1'
+DB_PORT = 3306
+DB_USER = 'root'
+DB_PASS = 'password'
+DB_NAME = "HW3"
+after that run python create_tables.py <path_to_your_xlsx>

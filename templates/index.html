@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Home</title>
+    <script src="https://unpkg.com/htmx.org@1.9.2"></script>
+</head>
+<body>
+    <h1>Welcome to the Home Page</h1>
+
+    <a href="/about">Go to About Page</a>
+
+    <br><br>
+    <button
+        hx-get="/get-message"
+        hx-target="#output"
+        hx-swap="innerHTML">
+        Get Signal
+    </button>
+
+    <div id="output" style="margin-top: 20px;"></div>
+</body>
+</html>
