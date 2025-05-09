@@ -185,7 +185,6 @@ def transfer_excel_to_mysql(filepath):
     xls = pd.ExcelFile(filepath)
     conn = get_mysql_connection()
     print(conn)
-    cursor = conn.cursor()
 
     tables_to_parse_in_order = ["DBManagers", "Players", "Titles", "Sponsors", "Teams", "PlayerTeams", "Coaches", "CoachCertifications", "Arbiters", "ArbiterCertifications", "Halls", "Tables", "Matches", "MatchAssignments"]
     for name in tables_to_parse_in_order:
