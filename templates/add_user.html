@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add New User - ChessDB</title>
+    <script>
+        function showRoleSpecificFields() {
+            var role = document.getElementById('role').value;
+            document.getElementById('player_fields').style.display = 'none';
+            document.getElementById('coach_fields').style.display = 'none';
+            document.getElementById('arbiter_fields').style.display = 'none';
+
+            if (role === 'player') {
+                document.getElementById('player_fields').style.display = 'block';
+            } else if (role === 'coach') {
+                document.getElementById('coach_fields').style.display = 'block';
+            } else if (role === 'arbiter') {
+                document.getElementById('arbiter_fields').style.display = 'block';
+            }
+        }
+    </script>
+</head>
+<body onload="showRoleSpecificFields()">
+    <h1>Add New User</h1>
+    <a href="{{ url_for('db_manager_dashboard') }}">Back to Dashboard</a>
+    <form action="{{ url_for('add_user') }}" method="post">
+        <h2>Common Information</h2>
+        <div>
+            <label for="username">Username:</label>
+            <input type="text" id="username" name="username" required>
+        </div>
+        <div>
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password" required>
+            <small>Min 8 chars, 1 uppercase, 1 lowercase, 1 digit, 1 special char.</small>
+        </div>
+        <div>
+            <label for="name">Name:</label>
+            <input type="text" id="name" name="name" required>
+        </div>
+        <div>
+            <label for="surname">Surname:</label>
+            <input type="text" id="surname" name="surname" required>
+        </div>
+        <div>
+            <label for="nationality">Nationality:</label>
+            <input type="text" id="nationality" name="nationality" required>
+        </div>
+        <div>
+            <label for="role">Role:</label>
+            <select id="role" name="role" onchange="showRoleSpecificFields()" required>
+                <option value="player">Player</option>
+                <option value="coach">Coach</option>
+                <option value="arbiter">Arbiter</option>
+            </select>
+        </div>
+
+        <div id="player_fields" style="display: none;">
+            <h2>Player Specific Information</h2>
+            <div>
+                <label for="date_of_birth">Date of Birth (DD-MM-YYYY):</label>
+                <input type="text" id="date_of_birth" name="date_of_birth" pattern="\d{2}-\d{2}-\d{4}" required>
+            </div>
+            <div>
+                <label for="elo_rating">ELO Rating (must be > 1000):</label>
+                <input type="number" id="elo_rating" name="elo_rating" min="1001" required>
+            </div>
+            <div>
+                <label for="fide_id">FIDE ID:</label>
+                <input type="text" id="fide_id" name="fide_id" required>
+            </div>
+            <div>
+                <label for="title_id">Title (Optional):</label>
+                <select id="title_id" name="title_id">
+                    <option value="">-- Select Title (Optional) --</option>
+                    {% for title in all_titles %}
+                    <option value="{{ title.title_id }}">{{ title.title_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <div id="coach_fields" style="display: none;">
+            <h2>Coach Specific Information</h2>
+            <div>
+                <label for="team_id_coach">Team:</label>
+                <select id="team_id_coach" name="team_id_coach" required>
+                    <option value="">-- Select Team --</option>
+                    {% for team in all_teams %}
+                    <option value="{{ team.team_id }}">{{ team.team_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label for="contract_start_coach">Contract Start (DD-MM-YYYY):</label>
+                <input type="text" id="contract_start_coach" name="contract_start_coach" pattern="\d{2}-\d{2}-\d{4}" required>
+            </div>
+            <div>
+                <label for="contract_end_coach">Contract End (DD-MM-YYYY):</label>
+                <input type="text" id="contract_end_coach" name="contract_end_coach" pattern="\d{2}-\d{2}-\d{4}" required>
+            </div>
+            <div>
+                <label for="certifications_coach">Certifications (comma-separated, processed separately):</label>
+                <input type="text" id="certifications_coach" name="certifications_coach">
+            </div>
+        </div>
+
+        <div id="arbiter_fields" style="display: none;">
+            <h2>Arbiter Specific Information</h2>
+            <div>
+                <label for="experience_level">Experience Level:</label>
+                <select id="experience_level" name="experience_level" required>
+                    <option value="beginner">Beginner</option>
+                    <option value="intermediate">Intermediate</option>
+                    <option value="advanced">Advanced</option>
+                </select>
+            </div>
+            <div>
+                <label for="certifications_arbiter">Certifications (comma-separated):</label>
+                <input type="text" id="certifications_arbiter" name="certifications_arbiter">
+            </div>
+        </div>
+
+        <div>
+            <button type="submit">Add User</button>
+        </div>
+    </form>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <ul>
+            {% for category, message in messages %}
+                <li class="{{ category }}">{{ message }}</li>
+            {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
+</body>
+</html>

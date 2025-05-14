@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Player Dashboard - ChessDB</title>
+</head>
+<body>
+    <h1>Player Dashboard</h1>
+    <p>Welcome, {{ username }}!</p>
+    <a href="/logout">Logout</a>
+
+    <h2>Your Match History</h2>
+    {% if match_history and match_history|length > 0 %}
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Match ID</th>
+                <th>Date</th>
+                <th>Time Slot</th>
+                <th>Hall</th>
+                <th>Table</th>
+                <th>Played As</th>
+                <th>Opponent</th>
+                <th>Your Team</th>
+                <th>Opponent's Team</th>
+                <th>Result</th>
+                <th>Arbiter's Rating</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for match in match_history %}
+            <tr>
+                <td>{{ match.match_id }}</td>
+                <td>{{ match.date.strftime('%d-%m-%Y') if match.date else 'N/A' }}</td>
+                <td>{{ match.time_slot }}</td>
+                <td>{{ match.hall_name }}</td>
+                <td>{{ match.table_id }}</td>
+                {% if session.username == match.white_player %}
+                    <td>White</td>
+                    <td>{{ match.black_player_name + ' ' + match.black_player_surname if match.black_player_name else match.black_player if match.black_player else 'N/A' }}</td>
+                    <td>{{ match.team1_name }}</td>
+                    <td>{{ match.team2_name }}</td>
+                {% elif session.username == match.black_player %}
+                    <td>Black</td>
+                    <td>{{ match.white_player_name + ' ' + match.white_player_surname if match.white_player_name else match.white_player if match.white_player else 'N/A' }}</td>
+                    <td>{{ match.team2_name }}</td>
+                    <td>{{ match.team1_name }}</td>
+                {% else %}
+                    <td>Observer</td> {# Should not happen if query is correct #}
+                    <td>N/A</td>
+                    <td>N/A</td>
+                    <td>N/A</td>
+                {% endif %}
+                <td>{{ match.result if match.result else 'Pending' }}</td>
+                <td>{{ match.match_rating_by_arbiter if match.match_rating_by_arbiter is not none else 'Not Rated' }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>You have no match history yet.</p>
+    {% endif %}
+
+    <h2>Co-Player Statistics</h2>
+    <a href="/view_co_player_stats">View Co-Player Statistics</a>
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <ul>
+            {% for category, message in messages %}
+                <li class="{{ category }}">{{ message }}</li>
+            {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
+</body>
+</html>

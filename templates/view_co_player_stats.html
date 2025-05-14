@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Co-Player Statistics - ChessDB</title>
+</head>
+<body>
+    <h1>Co-Player Statistics</h1>
+    <a href="{{ url_for('player_dashboard') }}">Back to Dashboard</a>
+
+    <h2>Players You've Played Against</h2>
+    {% if opponents and opponents|length > 0 %}
+    <ul>
+        {% for opponent in opponents %}
+        <li>{{ opponent.name }} {{ opponent.surname }} ({{ opponent.username }}) - ELO: {{ opponent.elo_rating }}</li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p>You haven't played against anyone yet.</p>
+    {% endif %}
+
+    <h2>Most Frequent Opponent(s)</h2>
+    {% if most_frequent_opponent_stats and most_frequent_opponent_stats.opponents_info %}
+        <p>
+            You have played the most games with:
+            {% for opponent_info in most_frequent_opponent_stats.opponents_info %}
+                {{ opponent_info.name }} {{ opponent_info.surname }}
+                {% if not loop.last %}, {% endif %}
+            {% endfor %}.
+        </p>
+        <p>
+            {% if most_frequent_opponent_stats.is_average %}
+                Their average ELO rating is: {{ "%.2f"|format(most_frequent_opponent_stats.elo_rating_metric) }}.
+            {% else %}
+                Their ELO rating is: {{ most_frequent_opponent_stats.elo_rating_metric }}.
+            {% endif %}
+        </p>
+    {% elif opponents and opponents|length > 0 %} 
+        {# This case implies opponents exist, but most_frequent_stats might be None if all played only once #}
+        <p>No single opponent or group of opponents stands out as most frequently played, or data is insufficient.</p>
+    {% else %}
+        <p>No opponent data to calculate most frequent opponent statistics.</p>
+    {% endif %}
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <ul>
+            {% for category, message in messages %}
+                <li class="{{ category }}">{{ message }}</li>
+            {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
+</body>
+</html>

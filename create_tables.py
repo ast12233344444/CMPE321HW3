@@ -11,7 +11,7 @@ app = Flask(__name__)
 DB_HOST = '127.0.0.1'
 DB_PORT = 3306
 DB_USER = 'root'
-DB_PASS = 'password'
+DB_PASS = '---' # Updated to match your provided password
 DB_NAME = "HW3"
 
 
@@ -27,10 +27,10 @@ def create_table_dbmanagers(df: pd.DataFrame, db_connector):
     table_name = 'DBManagers'
     with db_connector.cursor() as cursor:
         cursor.execute(f"DROP TABLE IF EXISTS `{table_name}`;")
-        cursor.execute(f"CREATE TABLE `{table_name}` (username TEXT, password TEXT, PRIMARY KEY (username));")
+        cursor.execute(f"CREATE TABLE `{table_name}` (username VARCHAR(255), password TEXT, PRIMARY KEY (username));")
 
         for _, row in df.iterrows():
-            password = hash_password_sha256(row["password"])
+            password = hash_password_sha256(str(row["password"])) # Ensure password is a string
             sql = f"INSERT INTO `{table_name}` VALUES (%s, %s)"
             cursor.execute(sql, (row['username'], password))
 
@@ -38,14 +38,17 @@ def create_table_players(df: pd.DataFrame, db_connector):
     table_name = 'Players'
     with db_connector.cursor() as cursor:
         cursor.execute(f"DROP TABLE IF EXISTS `{table_name}`;")
-        cursor.execute(f"CREATE TABLE `{table_name}` (username TEXT, password TEXT, name TEXT, surname TEXT, nationality TEXT, date_of_birth DATE, fide_id TEXT, elo_rating INT, title_id INT, "
-                       f"PRIMARY KEY (username), FOREIGN KEY (title_id) REFERENCES Titles(title_id));")
+        cursor.execute(f"CREATE TABLE `{table_name}` (username VARCHAR(255), password TEXT, name TEXT, surname TEXT, nationality TEXT, date_of_birth DATE, fide_id VARCHAR(255), elo_rating INT, title_id INT, "
+                       f"PRIMARY KEY (username), FOREIGN KEY (title_id) REFERENCES Titles(title_id), "
+                       f"UNIQUE (fide_id), CHECK (elo_rating > 1000));")
 
         for _, row in df.iterrows():
-            password = hash_password_sha256(row["password"])
+            password = hash_password_sha256(str(row["password"])) # Ensure password is a string
+            # Assuming row['date_of_birth'] is a datetime object or a string pandas can parse to datetime
+            dob_formatted = pd.to_datetime(row['date_of_birth'], dayfirst=True).strftime("%Y-%m-%d")
             sql = f"INSERT INTO `{table_name}` VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)"
             cursor.execute(sql, (row['username'], password, row['name'], row['surname'], row['nationality'],
-                                 datetime.strftime(row['date_of_birth'], "%D-%M-%Y"), row['fide_id'], row['elo_rating'], row['title_id']))
+                                 dob_formatted, row['fide_id'], row['elo_rating'], row['title_id']))
 
 def create_table_titles(df: pd.DataFrame, db_connector):
     table_name = 'Titles'
@@ -61,7 +64,7 @@ def create_table_player_teams(df: pd.DataFrame, db_connector):
     table_name = 'PlayerTeams'
     with db_connector.cursor() as cursor:
         cursor.execute(f"DROP TABLE IF EXISTS `{table_name}`;")
-        cursor.execute(f"CREATE TABLE `{table_name}` (username TEXT, team_id INT, PRIMARY KEY (username, team_id), "
+        cursor.execute(f"CREATE TABLE `{table_name}` (username VARCHAR(255), team_id INT, PRIMARY KEY (username, team_id), "
                        f"FOREIGN KEY (username) REFERENCES Players(username), FOREIGN KEY (team_id) REFERENCES Teams(team_id));")
 
         for _, row in df.iterrows():
@@ -72,25 +75,27 @@ def create_table_coaches(df: pd.DataFrame, db_connector):
     table_name = 'Coaches'
     with db_connector.cursor() as cursor:
         cursor.execute(f"DROP TABLE IF EXISTS `{table_name}`;")
-        cursor.execute(f"CREATE TABLE `{table_name}` (username TEXT, password TEXT, name TEXT, surname TEXT, nationality TEXT, "
+        cursor.execute(f"CREATE TABLE `{table_name}` (username VARCHAR(255), password TEXT, name TEXT, surname TEXT, nationality TEXT, "
                        f"team_id INT, contract_start DATE, contract_end DATE, PRIMARY KEY (username), FOREIGN KEY (team_id) REFERENCES Teams(team_id));")
 
         for _, row in df.iterrows():
-            password = hash_password_sha256(row["password"])
+            password = hash_password_sha256(str(row["password"])) # Ensure password is a string
+            contract_start_formatted = pd.to_datetime(row['contract_start'], dayfirst=True).strftime("%Y-%m-%d")
+            contract_end_formatted = pd.to_datetime(row['contract_finish'], dayfirst=True).strftime("%Y-%m-%d") # Changed 'contract_end' to 'contract_finish'
             sql = f"INSERT INTO `{table_name}` VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
             cursor.execute(sql, (row['username'], password, row['name'], row['surname'], row['nationality'], row['team_id'],
-                                 datetime.strftime(row['contract_start'], "%D-%M-%Y"), datetime.strftime(row['contract_end'], "%D-%M-%Y")))
+                                 contract_start_formatted, contract_end_formatted))
 
 def create_table_coach_certifications(df: pd.DataFrame, db_connector):
     table_name = 'CoachCertifications'
     with db_connector.cursor() as cursor:
         cursor.execute(f"DROP TABLE IF EXISTS `{table_name}`;")
-        cursor.execute(f"CREATE TABLE `{table_name}` (username TEXT, certification TEXT, PRIMARY KEY (username, certification), "
-                       f"FOREIGN KEY (username) REFERENCES Coaches(username);")
+        cursor.execute(f"CREATE TABLE `{table_name}` (username VARCHAR(255), certification VARCHAR(255), PRIMARY KEY (username, certification), " # Assuming certification can also be VARCHAR
+                       f"FOREIGN KEY (username) REFERENCES Coaches(username));")
 
         for _, row in df.iterrows():
             sql = f"INSERT INTO `{table_name}` VALUES (%s, %s)"
-            cursor.execute(sql, (row['username'], row['certification']))
+            cursor.execute(sql, (row['coach_username'], row['certification'])) # Changed 'username' to 'coach_username'
 
 def create_table_teams(df: pd.DataFrame, db_connector):
     table_name = 'Teams'
@@ -117,11 +122,11 @@ def create_table_arbiters(df: pd.DataFrame, db_connector):
     table_name = 'Arbiters'
     with db_connector.cursor() as cursor:
         cursor.execute(f"DROP TABLE IF EXISTS `{table_name}`;")
-        cursor.execute(f"CREATE TABLE `{table_name}` (username TEXT, password TEXT, name TEXT, surname TEXT, nationality TEXT,"
-                       f"experience_level TEXT, PRIMARY KEY (username));")
+        cursor.execute(f"CREATE TABLE `{table_name}` (username VARCHAR(255), password TEXT, name TEXT, surname TEXT, nationality TEXT,"
+                       f"experience_level VARCHAR(50), PRIMARY KEY (username));") # experience_level to VARCHAR
 
         for _, row in df.iterrows():
-            password = hash_password_sha256(row["password"])
+            password = hash_password_sha256(str(row["password"])) # Ensure password is a string
             sql = f"INSERT INTO `{table_name}` VALUES (%s, %s, %s, %s, %s, %s)"
             cursor.execute(sql, (row['username'], password, row['name'], row['surname'], row['nationality'], row['experience_level']))
 
@@ -129,7 +134,7 @@ def create_table_arbiters_certifications(df: pd.DataFrame, db_connector):
     table_name = 'ArbiterCertifications'
     with db_connector.cursor() as cursor:
         cursor.execute(f"DROP TABLE IF EXISTS `{table_name}`;")
-        cursor.execute(f"CREATE TABLE `{table_name}` (username TEXT, certification TEXT, PRIMARY KEY (username, certification), "
+        cursor.execute(f"CREATE TABLE `{table_name}` (username VARCHAR(255), certification VARCHAR(255), PRIMARY KEY (username, certification), " # Assuming certification can also be VARCHAR
                        f"FOREIGN KEY (username) REFERENCES Arbiters(username));")
 
         for _, row in df.iterrows():
@@ -162,21 +167,25 @@ def create_table_matches(df: pd.DataFrame, db_connector):
     with db_connector.cursor() as cursor:
         cursor.execute(f"DROP TABLE IF EXISTS `{table_name}`;")
         cursor.execute(f"CREATE TABLE `{table_name}` (match_id INT, date DATE, time_slot INT, hall_id INT, table_id INT, "
-                       f"team1_id INT, team2_id INT, arbiter_username TEXT, ratings REAL,"
+                       f"team1_id INT, team2_id INT, arbiter_username VARCHAR(255), ratings INT," # Changed REAL to INT
                        f"PRIMARY KEY (match_id), FOREIGN KEY (table_id, hall_id) REFERENCES Tables(table_id, hall_id), "
                        f"FOREIGN KEY (team1_id) REFERENCES Teams(team_id), FOREIGN KEY (team2_id) REFERENCES Teams(team_id), "
-                       f"FOREIGN KEY (arbiter_username) REFERENCES Arbiters(username));")
+                       f"FOREIGN KEY (arbiter_username) REFERENCES Arbiters(username), "
+                       f"CHECK (ratings >= 1 AND ratings <= 10));")
 
         for _, row in df.iterrows():
+            match_date_formatted = pd.to_datetime(row['date'], dayfirst=True).strftime("%Y-%m-%d")
+            # Ensure rating is int for insertion if it comes as float from Excel
+            rating_value = int(row['ratings']) if pd.notna(row['ratings']) else None 
             sql = f"INSERT INTO `{table_name}` VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)"
-            cursor.execute(sql, (row['match_id'], datetime.strftime(row['date'], "%D-%M-%Y"), row['time_slot'], row['hall_id'], row['table_id'],
-                                 row['team1_id'], row['team2_id'], row['arbiter_username'], row['ratings']))
+            cursor.execute(sql, (row['match_id'], match_date_formatted, row['time_slot'], row['hall_id'], row['table_id'],
+                                 row['team1_id'], row['team2_id'], row['arbiter_username'], rating_value))
 
 def create_table_match_assignments(df: pd.DataFrame, db_connector):
     table_name = "MatchAssignments"
     with db_connector.cursor() as cursor:
         cursor.execute(f"DROP TABLE IF EXISTS `{table_name}`;")
-        cursor.execute(f"CREATE TABLE `{table_name}` (match_id INT, white_player TEXT, black_player TEXT, result ENUM('draw', 'black wins', 'white wins') "
+        cursor.execute(f"CREATE TABLE `{table_name}` (match_id INT, white_player VARCHAR(255), black_player VARCHAR(255), result ENUM('draw', 'black wins', 'white wins'), " # Added comma, player usernames to VARCHAR
                        f"PRIMARY KEY (match_id), FOREIGN KEY (match_id) REFERENCES Matches(match_id), "
                        f"FOREIGN KEY (white_player) REFERENCES Players(username), FOREIGN KEY (black_player) REFERENCES Players(username));")
 
@@ -186,8 +195,17 @@ def transfer_excel_to_mysql(filepath):
     conn = get_mysql_connection()
     print(conn)
 
-    tables_to_parse_in_order = ["DBManagers", "Players", "Titles", "Sponsors", "Teams", "PlayerTeams", "Coaches", "CoachCertifications", "Arbiters", "ArbiterCertifications", "Halls", "Tables", "Matches", "MatchAssignments"]
+    with conn.cursor() as cursor:
+        cursor.execute("SET FOREIGN_KEY_CHECKS = 0;")
+
+    tables_to_parse_in_order = [
+        "DBManagers", "Titles", "Sponsors", "Halls", "Arbiters", 
+        "Teams", "Players", "Coaches", 
+        "PlayerTeams", "CoachCertifications", "ArbiterCertifications", 
+        "Tables", "Matches", "MatchAssignments"
+    ] # Revised order for foreign key dependencies
     for name in tables_to_parse_in_order:
+        print(f"Processing sheet: {name}...") # Added print statement
         df = xls.parse(name)
 
         if name == 'DBManagers':
@@ -220,6 +238,10 @@ def transfer_excel_to_mysql(filepath):
             create_table_match_assignments(df, conn)
 
     conn.commit()
+    
+    with conn.cursor() as cursor:
+        cursor.execute("SET FOREIGN_KEY_CHECKS = 1;")
+    
     conn.close()
 
 def main():
@@ -236,4 +258,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-

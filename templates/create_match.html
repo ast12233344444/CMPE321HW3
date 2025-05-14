@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Match - ChessDB</title>
+</head>
+<body>
+    <h1>Create New Match</h1>
+    <p>
+        Creating match for your team: 
+        <strong>{% if coach_team %}{{ coach_team.team_name }} (ID: {{ coach_team.team_id }}){% else %}Error: Coach team not found.{% endif %}</strong>
+    </p>
+    <a href="{{ url_for('coach_dashboard') }}">Back to Dashboard</a>
+    
+    <form action="{{ url_for('create_match') }}" method="post">
+        <div>
+            <label for="match_date">Date (DD-MM-YYYY):</label>
+            <input type="text" id="match_date" name="match_date" pattern="\d{2}-\d{2}-\d{4}" placeholder="DD-MM-YYYY" required>
+        </div>
+        <div>
+            <label for="time_slot">Time Slot (Match starts):</label>
+            <select id="time_slot" name="time_slot" required>
+                <option value="1">Slot 1 (Occupies 1 & 2)</option>
+                <option value="2">Slot 2 (Occupies 2 & 3)</option>
+                <option value="3">Slot 3 (Occupies 3 & 4)</option>
+            </select>
+        </div>
+        <div>
+            <label for="hall_id">Hall:</label>
+            <select id="hall_id" name="hall_id" required>
+                <option value="">-- Select Hall --</option>
+                {% for hall_item in all_halls %} {# Changed from 'hall' to 'hall_item' to avoid conflict if 'hall' is a global #}
+                <option value="{{ hall_item.hall_id }}">{{ hall_item.hall_name }} ({{ hall_item.country }})</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label for="table_id">Table:</label>
+            <select id="table_id" name="table_id" required>
+                <option value="">-- Select Table --</option>
+                {# This dropdown ideally should be filtered by selected hall via JavaScript. 
+                   For now, listing all tables with their hall names for clarity. #}
+                {% for table_info in all_tables_with_hall_info %}
+                <option value="{{ table_info.table_id }}">Table {{ table_info.table_id }} (in {{ table_info.hall_name }})</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label for="opponent_team_id">Opponent Team:</label>
+            <select id="opponent_team_id" name="opponent_team_id" required>
+                <option value="">-- Select Opponent Team --</option>
+                {% for team in opponent_teams %}
+                <option value="{{ team.team_id }}">{{ team.team_name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label for="arbiter_username">Arbiter:</label>
+            <select id="arbiter_username" name="arbiter_username" required>
+                <option value="">-- Select Arbiter --</option>
+                {% for arbiter_user in certified_arbiters %} {# Changed from 'arbiter' to 'arbiter_user' #}
+                <option value="{{ arbiter_user.username }}">{{ arbiter_user.name }} {{ arbiter_user.surname }} ({{ arbiter_user.username }})</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <button type="submit">Create Match</button>
+        </div>
+    </form>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <ul>
+            {% for category, message in messages %}
+                <li class="{{ category }}">{{ message }}</li>
+            {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
+</body>
+</html>

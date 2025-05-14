@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Submit Match Rating - ChessDB</title>
+</head>
+<body>
+    <h1>Submit Match Rating</h1>
+    <a href="{{ url_for('arbiter_dashboard') }}">Back to Dashboard</a>
+
+    {% if unrated_matches and unrated_matches|length > 0 %}
+    <form action="{{ url_for('submit_rating') }}" method="post">
+        <div>
+            <label for="match_id">Select Match to Rate:</label>
+            <select id="match_id" name="match_id" required>
+                <option value="">-- Select Match --</option>
+                {% for match in unrated_matches %}
+                    <option value="{{ match.match_id }}">
+                        ID: {{ match.match_id }} ({{ match.date.strftime('%d-%m-%Y') if match.date else 'N/A' }}) - 
+                        {{ match.team1_name }} vs {{ match.team2_name }} 
+                        (Hall: {{ match.hall_name }}, Table: {{ match.table_id }}, Slot: {{ match.time_slot }})
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label for="rating_value">Rating (1-10):</label>
+            <input type="number" id="rating_value" name="rating_value" min="1" max="10" required>
+        </div>
+        <div>
+            <button type="submit">Submit Rating</button>
+        </div>
+    </form>
+    {% else %}
+    <p>No matches currently available for you to rate (they may be in the future, already rated, or not yet played).</p>
+    {% endif %}
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <ul>
+            {% for category, message in messages %}
+                <li class="{{ category }}">{{ message }}</li>
+            {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
+</body>
+</html>

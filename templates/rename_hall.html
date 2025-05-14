@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rename Hall - ChessDB</title>
+</head>
+<body>
+    <h1>Rename Hall</h1>
+    <a href="{{ url_for('db_manager_dashboard') }}">Back to Dashboard</a>
+    <form action="{{ url_for('rename_hall') }}" method="post">
+        <div>
+            <label for="hall_id">Select Hall:</label>
+            <select id="hall_id" name="hall_id" required>
+                {% for hall in halls %}
+                    <option value="{{ hall.hall_id }}">{{ hall.hall_name }} (ID: {{ hall.hall_id }})</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label for="new_hall_name">New Hall Name:</label>
+            <input type="text" id="new_hall_name" name="new_hall_name" required>
+        </div>
+        <div>
+            <button type="submit">Rename Hall</button>
+        </div>
+    </form>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <ul>
+            {% for category, message in messages %}
+                <li class="{{ category }}">{{ message }}</li>
+            {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
+</body>
+</html>

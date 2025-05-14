@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arbiter Statistics - ChessDB</title>
+</head>
+<body>
+    <h1>Your Rating Statistics</h1>
+    <a href="{{ url_for('arbiter_dashboard') }}">Back to Dashboard</a>
+
+    {% if stats %}
+        <p>Total Matches Rated: {{ stats.total_rated_matches }}</p>
+        <p>Average Rating Given: {{ "%.2f"|format(stats.average_rating) if stats.average_rating is not none else 'N/A' }}</p>
+    {% else %}
+        <p>No rating statistics available yet.</p>
+    {% endif %}
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <ul>
+            {% for category, message in messages %}
+                <li class="{{ category }}">{{ message }}</li>
+            {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
+</body>
+</html>

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delete Match - ChessDB</title>
+</head>
+<body>
+    <h1>Delete Match</h1>
+    <a href="{{ url_for('coach_dashboard') }}">Back to Dashboard</a>
+
+    {% if coach_team_matches and coach_team_matches|length > 0 %}
+    <form action="{{ url_for('delete_match') }}" method="post">
+        <div>
+            <label for="match_id">Select Match to Delete:</label>
+            <select id="match_id" name="match_id" required>
+                <option value="">-- Select Match --</option>
+                {% for match in coach_team_matches %}
+                    <option value="{{ match.match_id }}">
+                        ID: {{ match.match_id }} ({{ match.date.strftime('%d-%m-%Y') if match.date else 'N/A' }} S:{{ match.time_slot }}) - 
+                        {{ match.team1_name }} vs {{ match.team2_name }} 
+                        (Hall: {{ match.hall_name }}, Table: {{ match.table_id }})
+                        (Arbiter: {{ match.arbiter_name + ' ' + match.arbiter_surname if match.arbiter_name else match.arbiter_username if match.arbiter_username else 'N/A' }})
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <button type="submit" onclick="return confirm('Are you sure you want to delete this match and all related data?');">Delete Match</button>
+        </div>
+    </form>
+    {% else %}
+    <p>No matches involving your team are available for deletion.</p>
+    {% endif %}
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <ul>
+            {% for category, message in messages %}
+                <li class="{{ category }}">{{ message }}</li>
+            {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
+</body>
+</html>

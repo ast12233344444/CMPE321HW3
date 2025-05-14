@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arbiter Dashboard - ChessDB</title>
+</head>
+<body>
+    <h1>Arbiter Dashboard</h1>
+    <p>Welcome, {{ username }}!</p>
+    <a href="/logout">Logout</a>
+
+    <h2>Match Rating</h2>
+    <ul>
+        <li><a href="/submit_rating">Submit Match Rating</a></li>
+    </ul>
+
+    <h2>Your Statistics</h2>
+    <ul>
+        <li><a href="/view_arbiter_stats">View Your Rating Statistics</a></li>
+    </ul>
+
+    <h2>Assigned Matches</h2>
+    {% if assigned_matches and assigned_matches|length > 0 %}
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Match ID</th>
+                <th>Date</th>
+                <th>Time Slot</th>
+                <th>Hall</th>
+                <th>Table</th>
+                <th>Team 1</th>
+                <th>Team 2</th>
+                <th>White Player</th>
+                <th>Black Player</th>
+                <th>Result</th>
+                <th>Your Rating</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for match in assigned_matches %}
+            <tr>
+                <td>{{ match.match_id }}</td>
+                <td>{{ match.date.strftime('%d-%m-%Y') if match.date else 'N/A' }}</td>
+                <td>{{ match.time_slot }}</td>
+                <td>{{ match.hall_name }}</td>
+                <td>{{ match.table_id }}</td>
+                <td>{{ match.team1_name }}</td>
+                <td>{{ match.team2_name }}</td>
+                <td>
+                    {% if match.white_player_name and match.white_player_surname %}
+                        {{ match.white_player_name }} {{ match.white_player_surname }} ({{ match.white_player }})
+                    {% elif match.white_player %}
+                        {{ match.white_player }}
+                    {% else %}
+                        Not Assigned
+                    {% endif %}
+                </td>
+                <td>
+                    {% if match.black_player_name and match.black_player_surname %}
+                        {{ match.black_player_name }} {{ match.black_player_surname }} ({{ match.black_player }})
+                    {% elif match.black_player %}
+                        {{ match.black_player }}
+                    {% else %}
+                        Not Assigned
+                    {% endif %}
+                </td>
+                <td>{{ match.result if match.result else 'Pending' }}</td>
+                <td>{{ match.ratings if match.ratings is not none else 'Not Rated' }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>No matches assigned to you yet, or all assigned matches have been rated.</p>
+    {% endif %}
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <ul>
+            {% for category, message in messages %}
+                <li class="{{ category }}">{{ message }}</li>
+            {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
+</body>
+</html>

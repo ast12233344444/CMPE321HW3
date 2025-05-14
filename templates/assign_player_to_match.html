@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assign Player to Match - ChessDB</title>
+</head>
+<body>
+    <h1>Assign Player to Match</h1>
+    <a href="{{ url_for('coach_dashboard') }}">Back to Dashboard</a>
+    {% if matches_needing_assignment and team_players %}
+    <form action="{{ url_for('assign_player_to_match') }}" method="post">
+        <div>
+            <label for="match_id">Select Match to Assign Player For:</label>
+            <select id="match_id" name="match_id" required>
+                <option value="">-- Select Match --</option>
+                {% for match in matches_needing_assignment %}
+                    <option value="{{ match.match_id }}">
+                        ID: {{ match.match_id }} ({{ match.date.strftime('%d-%m-%Y') if match.date else 'N/A' }} S:{{ match.time_slot }}) 
+                        vs {{ match.opponent_team_name }} 
+                        (Assign {{ match.player_color_to_assign }})
+                        in {{ match.hall_name }} - Table {{ match.table_id }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label for="player_username">Select Player from Your Team:</label>
+            <select id="player_username" name="player_username" required>
+                <option value="">-- Select Player --</option>
+                {% for player in team_players %}
+                    <option value="{{ player.username }}">{{ player.name }} {{ player.surname }} ({{ player.username }}) - ELO: {{ player.elo_rating }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <button type="submit">Assign Player</button>
+        </div>
+    </form>
+    {% elif not matches_needing_assignment %}
+    <p>No matches currently require player assignment from your team.</p>
+    {% elif not team_players %}
+    <p>You have no players on your team to assign.</p>
+    {% endif %}
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <ul>
+            {% for category, message in messages %}
+                <li class="{{ category }}">{{ message }}</li>
+            {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
+</body>
+</html>

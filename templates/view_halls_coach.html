@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View Halls - ChessDB</title>
+</head>
+<body>
+    <h1>Available Halls</h1>
+    <a href="{{ url_for('coach_dashboard') }}">Back to Dashboard</a>
+    
+    {% if halls and halls|length > 0 %}
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Hall ID</th>
+                <th>Name</th>
+                <th>Country</th>
+                <th>Capacity (Tables)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for hall in halls %}
+            <tr>
+                <td>{{ hall.hall_id }}</td>
+                <td>{{ hall.hall_name }}</td>
+                <td>{{ hall.country }}</td>
+                <td>{{ hall.capacity }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>No halls available to display.</p>
+    {% endif %}
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <ul>
+            {% for category, message in messages %}
+                <li class="{{ category }}">{{ message }}</li>
+            {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
+</body>
+</html>
