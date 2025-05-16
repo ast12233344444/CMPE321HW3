@@ -207,7 +207,9 @@ def get_matches_assigned_to_arbiter(username, db_connector):
         query = f"SELECT M.match_id FROM Matches M WHERE M.arbiter_username = %s"
         cursor.execute(query, (username))
 
-        return [row["match_id"] for row in cursor.fetchall()]
+        response_data = [row["match_id"] for row in cursor.fetchall()]
+        print(response_data)
+        return response_data
 
 def get_avg_n_count_ratings_arbiters(username, db_connector):
     with db_connector.cursor() as cursor:
@@ -340,6 +342,7 @@ def create_new_match(match_details: dict, db_connector):
             arbiter_username = match_details['arbiter_username']
             team1_id = match_details['team1_id'] # Coach's team
             team2_id = match_details['team2_id'] # Opponent team
+            creator = match_details['creator']
 
             # Constraint C1, C3, C4: Check for location/time conflict
             # A match occupies time_slot and time_slot + 1
@@ -386,11 +389,11 @@ def create_new_match(match_details: dict, db_connector):
 
             # Insert the new match
             sql_insert_match = """
-                INSERT INTO Matches (match_id, date, time_slot, hall_id, table_id, team1_id, team2_id, arbiter_username, ratings)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, NULL) 
+                INSERT INTO Matches (match_id, date, time_slot, hall_id, table_id, team1_id, team2_id, arbiter_username, ratings, Creator)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, NULL, %s) 
             """
             # Ratings is NULL initially
-            cursor.execute(sql_insert_match, (next_match_id, match_date, time_slot, hall_id, table_id, team1_id, team2_id, arbiter_username))
+            cursor.execute(sql_insert_match, (next_match_id, match_date, time_slot, hall_id, table_id, team1_id, team2_id, arbiter_username, creator))
             
             # db_connector.commit() # autocommit is True in db_config
             return {"status": 200, "message": f"Match ID {next_match_id} created successfully.", "match_id": next_match_id}
@@ -441,7 +444,7 @@ def get_coach_matches_needing_assignment(coach_team_id: int, db_connector):
                 FROM Matches M
                 LEFT JOIN MatchAssignments MA ON M.match_id = MA.match_id
                 JOIN Halls H ON M.hall_id = H.hall_id
-                JOIN Tables Tbl ON M.table_id = Tbl.table_id AND M.hall_id = Tbl.hall_id
+                JOIN Tables Tbl ON M.table_id = Tbl.table_id
                 JOIN Teams T1 ON M.team1_id = T1.team_id
                 JOIN Teams T2 ON M.team2_id = T2.team_id
                 WHERE 
@@ -569,10 +572,11 @@ def get_matches_involving_coach_team(coach_team_id: int, db_connector):
                     MA.black_player,
                     PB.name as black_player_name, PB.surname as black_player_surname,
                     MA.result,
-                    M.ratings
+                    M.ratings,
+                    M.Creator
                 FROM Matches M
                 JOIN Halls H ON M.hall_id = H.hall_id
-                JOIN Tables Tbl ON M.table_id = Tbl.table_id AND M.hall_id = Tbl.hall_id
+                JOIN Tables Tbl ON M.table_id = Tbl.table_id
                 JOIN Teams T1 ON M.team1_id = T1.team_id
                 JOIN Teams T2 ON M.team2_id = T2.team_id
                 LEFT JOIN Arbiters ARB ON M.arbiter_username = ARB.username
@@ -580,10 +584,11 @@ def get_matches_involving_coach_team(coach_team_id: int, db_connector):
                 LEFT JOIN Players PW ON MA.white_player = PW.username
                 LEFT JOIN Players PB ON MA.black_player = PB.username
                 WHERE M.team1_id = %s OR M.team2_id = %s
-                ORDER BY M.date DESC, M.time_slot DESC
+                ORDER BY M.date DESC, M.time_slot DESC  
             """
             cursor.execute(query, (coach_team_id, coach_team_id))
             matches = cursor.fetchall()
+
             return {"status": 200, "matches": matches}
     except Exception as e:
         print(f"Error in get_matches_involving_coach_team: {str(e)}")
@@ -649,7 +654,7 @@ def get_detailed_matches_for_arbiter(arbiter_username: str, db_connector):
                     MA.result
                 FROM Matches M
                 JOIN Halls H ON M.hall_id = H.hall_id
-                JOIN Tables Tbl ON M.table_id = Tbl.table_id AND M.hall_id = Tbl.hall_id
+                JOIN Tables Tbl ON M.table_id = Tbl.table_id
                 JOIN Teams T1 ON M.team1_id = T1.team_id
                 JOIN Teams T2 ON M.team2_id = T2.team_id
                 LEFT JOIN MatchAssignments MA ON M.match_id = MA.match_id
@@ -680,7 +685,7 @@ def get_unrated_past_matches_for_arbiter(arbiter_username: str, db_connector):
                     T2.team_name as team2_name
                 FROM Matches M
                 JOIN Halls H ON M.hall_id = H.hall_id
-                JOIN Tables Tbl ON M.table_id = Tbl.table_id AND M.hall_id = Tbl.hall_id
+                JOIN Tables Tbl ON M.table_id = Tbl.table_id
                 JOIN Teams T1 ON M.team1_id = T1.team_id
                 JOIN Teams T2 ON M.team2_id = T2.team_id
                 WHERE M.arbiter_username = %s
@@ -809,7 +814,7 @@ def get_player_match_history_detailed(player_username: str, db_connector):
                 FROM Matches M
                 JOIN MatchAssignments MA ON M.match_id = MA.match_id
                 JOIN Halls H ON M.hall_id = H.hall_id
-                JOIN Tables Tbl ON M.table_id = Tbl.table_id AND M.hall_id = Tbl.hall_id
+                JOIN Tables Tbl ON M.table_id = Tbl.table_id
                 JOIN Teams T1 ON M.team1_id = T1.team_id
                 JOIN Teams T2 ON M.team2_id = T2.team_id
                 LEFT JOIN Players P_W ON MA.white_player = P_W.username

@@ -32,9 +32,10 @@
                 <th>Time Slot</th>
                 <th>Hall</th>
                 <th>Table</th>
-                <th>Opponent Team</th>
-                <th>Your Player</th>
-                <th>Opponent Player</th>
+                <th>Team 1</th>
+                <th>Team 2</th>tx>
+                <th>White Player</th>
+                <th>Black Player</th>
                 <th>Arbiter</th>
                 <th>Result</th>
                 <th>Rating</th>
@@ -48,12 +49,13 @@
                 <td>{{ match.time_slot }}</td>
                 <td>{{ match.hall_name }}</td>
                 <td>{{ match.table_id }}</td>
-                <td>{{ match.opponent_team_name }}</td>
-                <td>{{ match.your_player_name if match.your_player_name else 'Not Assigned' }}</td>
-                <td>{{ match.opponent_player_name if match.opponent_player_name else 'Not Assigned' }}</td>
+                <td>{{ match.team1_name }}</td>
+                <td>{{ match.team2_name }}</td>
+                <td>{{ match.white_player }}</td>
+                <td>{{ match.black_player }}</td>
                 <td>{{ match.arbiter_name }}</td>
                 <td>{{ match.result if match.result else 'Not Played' }}</td>
-                <td>{{ match.rating if match.rating else 'Not Rated' }}</td>
+                <td>{{ match.ratings if match.ratings else 'Not Rated' }}</td>
             </tr>
             {% endfor %}
         </tbody>

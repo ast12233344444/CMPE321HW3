@@ -3,6 +3,8 @@ import pymysql
 import database_calls as db # Importing the database call functions
 from datetime import datetime # Added for date parsing/formatting
 
+from database_calls import get_matches_assigned_to_arbiter
+
 app = Flask(__name__)
 app.secret_key = 'supersecretkey_dev123' # Using a more specific secret key
 
@@ -10,7 +12,7 @@ app.secret_key = 'supersecretkey_dev123' # Using a more specific secret key
 db_config = {
     'host': 'localhost',
     'user': 'root',
-    'password': 'Seyit6046', # User-provided password
+    'password': 'password', # User-provided password
     'db': 'HW3',             # User-provided database name
     'cursorclass': pymysql.cursors.DictCursor,
     'autocommit': True # Ensure changes are committed
@@ -176,6 +178,7 @@ def player_dashboard():
     if conn:
         try:
             history_result = db.get_player_match_history_detailed(player_username, conn)
+            print(history_result)
             if history_result.get("status") == 200:
                 match_history_data = history_result.get("match_history")
             else:
@@ -199,8 +202,10 @@ def arbiter_dashboard():
         try:
             arbiter_username = session['username']
             matches_result = db.get_detailed_matches_for_arbiter(arbiter_username, conn)
+            get_matches_assigned_to_arbiter(arbiter_username, conn)
             if matches_result.get("status") == 200:
                 assigned_matches_data = matches_result.get("detailed_matches")
+                print(assigned_matches_data)
             else:
                 flash(matches_result.get("message", "Could not fetch assigned matches."), "danger")
         except Exception as e:
@@ -246,6 +251,7 @@ def add_user():
                     'elo_rating': int(request.form['elo_rating']),
                     'title_id': request.form.get('title_id') # Optional
                 })
+                print("player params: ", params)
                 result = db.register_player(params, conn)
             elif role == 'coach':
                 contract_start_form = request.form['contract_start_coach'] # DD-MM-YYYY
@@ -265,12 +271,14 @@ def add_user():
                     'contract_end': ce_for_db_calls,
                     # Certifications are handled separately if needed, not by register_coach
                 })
+                print("coach params: ", params)
                 result = db.register_coach(params, conn)
             elif role == 'arbiter':
                 params.update({
                     'experience_level': request.form['experience_level'],
                     # 'certifications_arbiter': request.form.get('certifications_arbiter') # Not in db.register_arbiter
                 })
+                print("arbiter params: ", params)
                 result = db.register_arbiter(params, conn)
 
             if result and result.get("status") == 200:
@@ -320,7 +328,8 @@ def rename_hall():
             # Let's assume a generic one or adapt.
             # For now, using the one from database_calls, though it seems for coach.
              if hasattr(db, 'get_all_halls'): # Check if function exists
-                halls_list = db.get_all_halls(session['username'], conn) # Pass username as it expects
+                halls_list = db.get_all_halls(session['username'], conn)["halls"] # Pass username as it expects
+
         finally:
             conn.close()
     
@@ -466,7 +475,8 @@ def create_match():
                 'table_id': table_id,
                 'team1_id': coach_team_id,
                 'team2_id': opponent_team_id,
-                'arbiter_username': arbiter_username
+                'arbiter_username': arbiter_username,
+                'creator': coach_username
             }
             
             # Re-establish connection for POST, as the one from GET is closed.
@@ -625,6 +635,11 @@ def delete_match():
             matches_result = db.get_matches_involving_coach_team(coach_team_id, conn)
             if matches_result.get("status") == 200:
                 coach_team_matches = matches_result.get("matches")
+                matches_created_by_coach = []
+                for match in coach_team_matches:
+                    if match["Creator"] == coach_username:
+                        matches_created_by_coach.append(match)
+                coach_team_matches = matches_created_by_coach
         else:
             flash(coach_team_result.get("message", "Could not determine coach's current team."), "warning")
 

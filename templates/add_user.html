@@ -7,16 +7,38 @@
     <script>
         function showRoleSpecificFields() {
             var role = document.getElementById('role').value;
+
+            // Hide all and remove 'required' from all role-specific fields
             document.getElementById('player_fields').style.display = 'none';
             document.getElementById('coach_fields').style.display = 'none';
             document.getElementById('arbiter_fields').style.display = 'none';
 
+            // Helper function to toggle required attributes
+            function setRequiredFields(sectionId, required) {
+                const fields = document.querySelectorAll(`#${sectionId} [required]`);
+                fields.forEach(field => {
+                    if (required) {
+                        field.setAttribute('required', 'required');
+                    } else {
+                        field.removeAttribute('required');
+                    }
+                });
+            }
+
+            setRequiredFields('player_fields', false);
+            setRequiredFields('coach_fields', false);
+            setRequiredFields('arbiter_fields', false);
+
+            // Show relevant section and apply 'required'
             if (role === 'player') {
                 document.getElementById('player_fields').style.display = 'block';
+                setRequiredFields('player_fields', true);
             } else if (role === 'coach') {
                 document.getElementById('coach_fields').style.display = 'block';
+                setRequiredFields('coach_fields', true);
             } else if (role === 'arbiter') {
                 document.getElementById('arbiter_fields').style.display = 'block';
+                setRequiredFields('arbiter_fields', true);
             }
         }
     </script>

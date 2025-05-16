@@ -11,7 +11,7 @@ app = Flask(__name__)
 DB_HOST = '127.0.0.1'
 DB_PORT = 3306
 DB_USER = 'root'
-DB_PASS = '---' # Updated to match your provided password
+DB_PASS = 'password' # Updated to match your provided password
 DB_NAME = "HW3"
 
 
@@ -167,19 +167,19 @@ def create_table_matches(df: pd.DataFrame, db_connector):
     with db_connector.cursor() as cursor:
         cursor.execute(f"DROP TABLE IF EXISTS `{table_name}`;")
         cursor.execute(f"CREATE TABLE `{table_name}` (match_id INT, date DATE, time_slot INT, hall_id INT, table_id INT, "
-                       f"team1_id INT, team2_id INT, arbiter_username VARCHAR(255), ratings INT," # Changed REAL to INT
-                       f"PRIMARY KEY (match_id), FOREIGN KEY (table_id, hall_id) REFERENCES Tables(table_id, hall_id), "
-                       f"FOREIGN KEY (team1_id) REFERENCES Teams(team_id), FOREIGN KEY (team2_id) REFERENCES Teams(team_id), "
-                       f"FOREIGN KEY (arbiter_username) REFERENCES Arbiters(username), "
-                       f"CHECK (ratings >= 1 AND ratings <= 10));")
+                           f"team1_id INT, team2_id INT, arbiter_username VARCHAR(255), ratings INT, Creator VARCHAR(255),  " # Changed REAL to INT
+                           f"PRIMARY KEY (match_id), FOREIGN KEY (table_id, hall_id) REFERENCES Tables(table_id, hall_id), "
+                           f"FOREIGN KEY (team1_id) REFERENCES Teams(team_id), FOREIGN KEY (team2_id) REFERENCES Teams(team_id), "
+                           f"FOREIGN KEY (arbiter_username) REFERENCES Arbiters(username), FOREIGN KEY (creator) REFERENCES Coaches(username),"
+                           f"CHECK (ratings >= 1 AND ratings <= 10));")
 
         for _, row in df.iterrows():
             match_date_formatted = pd.to_datetime(row['date'], dayfirst=True).strftime("%Y-%m-%d")
             # Ensure rating is int for insertion if it comes as float from Excel
             rating_value = int(row['ratings']) if pd.notna(row['ratings']) else None 
-            sql = f"INSERT INTO `{table_name}` VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)"
+            sql = f"INSERT INTO `{table_name}` VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
             cursor.execute(sql, (row['match_id'], match_date_formatted, row['time_slot'], row['hall_id'], row['table_id'],
-                                 row['team1_id'], row['team2_id'], row['arbiter_username'], rating_value))
+                                 row['team1_id'], row['team2_id'], row['arbiter_username'], rating_value, None))
 
 def create_table_match_assignments(df: pd.DataFrame, db_connector):
     table_name = "MatchAssignments"
@@ -188,6 +188,10 @@ def create_table_match_assignments(df: pd.DataFrame, db_connector):
         cursor.execute(f"CREATE TABLE `{table_name}` (match_id INT, white_player VARCHAR(255), black_player VARCHAR(255), result ENUM('draw', 'black wins', 'white wins'), " # Added comma, player usernames to VARCHAR
                        f"PRIMARY KEY (match_id), FOREIGN KEY (match_id) REFERENCES Matches(match_id), "
                        f"FOREIGN KEY (white_player) REFERENCES Players(username), FOREIGN KEY (black_player) REFERENCES Players(username));")
+
+        for _, row in df.iterrows():
+            sql = f"INSERT INTO `{table_name}` VALUES (%s, %s, %s, %s)"
+            cursor.execute(sql, (row['match_id'], row['white_player'], row['black_player'], row['result']))
 
 # --- Utility to create table and insert data ---
 def transfer_excel_to_mysql(filepath):
@@ -258,3 +262,29 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+
+"""
+mysql> SHOW TABLES
+    -> ;
++-----------------------+
+| Tables_in_HW3         |
++-----------------------+
+| ArbiterCertifications |
+| Arbiters              |
+| CoachCertifications   |
+| Coaches               |
+| DBManagers            |
+| Halls                 |
+| MatchAssignments      |
+| Matches               |
+| PlayerTeams           |
+| Players               |
+| Sponsors              |
+| Tables                |
+| Teams                 |
+| Titles                |
++-----------------------+
+14 rows in set (0.00 sec)
+
+"""
